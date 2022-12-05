@@ -1,7 +1,13 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+#include "client.h"
+#include "server.h"
 #include "socks_proxy.h"
 
 
-void options_init(struct Config config) 
+void options_init(struct Config* config) 
 {
     config.client = 0;
     config.server = 0;
@@ -55,8 +61,8 @@ int main(int argc,char **argv)
         exit(-1);
     }
 
-    sinal(SIGCHLD,SIG_IGN);
-    sinal(SIGPIPE,SIG_IGN);
+    signal(SIGCHLD,SIG_IGN);
+    signal(SIGPIPE,SIG_IGN);
 
 
     if (config.client)
@@ -65,7 +71,12 @@ int main(int argc,char **argv)
     }
     else if (config.server)
     {
-        fprintf(stdout,"Username:%s\n Password:%s\n",config.username,config.password);
+        if (config.username != NULL && config.password != NULL)
+        {
+                fprintf(stdout,"[*] Username:%s\n[*] Password:%s. \n",config.username,config.password);
+        }
+        fprintf(stdout,"[*] no_authentication_mode");
+
         startServer(config);
     }
 
