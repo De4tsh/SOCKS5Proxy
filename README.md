@@ -167,6 +167,27 @@
 
 `socks5` 服务器收到请求后，解析内容。如果是 `UDP` 请求，服务器直接转发; 如果是 `TCP` 请求，服务器向目标服务器建立 `TCP` 连接，后续负责把客户端的所有数据转发到目标服务。
 
+
+# 实现之中的问题与解决
+
+## 1：返回报文的 `_toString` 转换函数
+
+`char* Sock5Response_toString(struct SOCK5_VALID_REP response,short int judge)` 
+
+由于在返回报文的时候不是将对应的结构体直接返回，而是将结构体中的每个字段的值拿出来放入形成一个字符串返回回去，所以这就涉及到在各个阶段中需要不同的 `_toString` 函数，于是想将这些函数聚集为一个，但这势必就面临一个问题，不同的阶段返回的参数是不同的，返回的值对应的结构体是不同的，由于 `C` 本身不支持默认参数与重载所以目前的想法是：定义一个大结构体，其中包含所有返回包的结构体，此后再根据需要选择即可（但这样肯定会造成资源的浪费）
+
+可以用联合体，就不会浪费空间了... 但需要改变原来使用到这两个结构体的地方
+
+```C
+union SOCKS_REP
+{
+    struct SOCK5_VALID_REP valid_rep;
+    struct SOCK5_AUTH_REP auth_rep;
+    struct SOCK5_BUILD_REP build_rep;
+};
+```
+改为 `char* Sock5Response_toString(union SOCKS_REP response,short int judge)`
+
 # 参考文章
 
 https://wiyi.org/socks5-protocol-in-deep.html#25-%E5%8D%8F%E8%AE%AE%E7%BB%86%E8%8A%82
